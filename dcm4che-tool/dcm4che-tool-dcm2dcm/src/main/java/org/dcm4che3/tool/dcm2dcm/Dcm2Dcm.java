@@ -51,6 +51,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
@@ -314,8 +315,18 @@ public class Dcm2Dcm {
 
     private void mtranscode(List<String> srcList, File dest) throws InterruptedException {
         ExecutorService executorService = maxThreads > 1 ? Executors.newFixedThreadPool(maxThreads) : null;
+        long startTime = System.nanoTime();
         for (String src : srcList) {
             mtranscode(new File(src), dest, executorService);
+        }
+        long elapsedTime = System.nanoTime() - startTime;
+        if(elapsedTime < 10_000_000_000L) {
+            long ms =  TimeUnit.MILLISECONDS.convert(elapsedTime, TimeUnit.NANOSECONDS);
+            System.out.println( ms + " milliseconds");
+        }
+        else {
+            long sec = TimeUnit.SECONDS.convert(elapsedTime, TimeUnit.NANOSECONDS);
+            System.out.println(sec + " seconds");
         }
         if (executorService != null) {
             executorService.shutdown();

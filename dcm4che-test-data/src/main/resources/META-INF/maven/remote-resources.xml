@@ -60,6 +60,15 @@
         <remoteResource>YBR_422.dcm</remoteResource>
         <remoteResource>YBR_FULL-RLE.dcm</remoteResource>
         <remoteResource>3gb-bulk-data-truncated</remoteResource>
+        <remoteResource>expected_imgForPrLUT.png</remoteResource>
+        <remoteResource>expected_overlay.png</remoteResource>
+        <remoteResource>imageForPrLUTs.dcm</remoteResource>
+        <remoteResource>jpeg2000-multiframe-multifragments.dcm</remoteResource>
+        <remoteResource>mono2-CT-16bit.dcm</remoteResource>
+        <remoteResource>overlay.dcm</remoteResource>
+        <remoteResource>prLUTs.dcm</remoteResource>
+        <remoteResource>prOverlay.dcm</remoteResource>
+        <remoteResource>signed-raw-9bit.dcm</remoteResource>
     </remoteResources>
     <sourceEncoding>UTF-8</sourceEncoding>
 </remoteResourcesBundle>

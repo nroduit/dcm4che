@@ -102,6 +102,7 @@
     <org.jvnet.mimepull.version>1.9.11</org.jvnet.mimepull.version>
     <org.jvnet.staxex.version>1.8.1</org.jvnet.staxex.version>
     <commons-cli.version>1.4</commons-cli.version>
+    <picocli.version>4.5.2</picocli.version>
   </properties>
   <build>
     <extensions>
@@ -187,6 +188,7 @@
     <module>dcm4che-imageio-opencv</module>
     <module>dcm4che-imageio-rle</module>
     <module>dcm4che-imageio-test</module>
+    <module>dcm4che-img</module>
     <module>dcm4che-json</module>
     <module>dcm4che-js-dict</module>
     <module>dcm4che-mime</module>

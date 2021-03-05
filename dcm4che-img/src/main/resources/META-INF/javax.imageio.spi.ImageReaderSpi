@@ -1,0 +1,2 @@
+# Conflict with the one in dcm4che-imageio
+#org.dcm4che3.img.DicomImageReaderSpi

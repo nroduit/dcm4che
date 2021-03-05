@@ -122,6 +122,7 @@
         <include>org.dcm4che:dcm4che-imageio</include>
         <include>org.dcm4che:dcm4che-imageio-opencv</include>
         <include>org.dcm4che:dcm4che-imageio-rle</include>
+        <include>org.dcm4che:dcm4che-img</include>
         <include>org.dcm4che:dcm4che-json</include>
         <include>org.dcm4che:dcm4che-mime</include>
         <include>org.dcm4che:dcm4che-net</include>
@@ -134,11 +135,13 @@
         <include>org.dcm4che.tool:dcm4che-tool-common</include>
         <include>org.dcm4che.tool:dcm4che-tool-dcmdump</include>
         <include>org.dcm4che.tool:dcm4che-tool-dcm2dcm</include>
+        <include>org.dcm4che.tool:dcm4che-tool-dcm2img</include>
         <include>org.dcm4che.tool:dcm4che-tool-dcm2jpg</include>
         <include>org.dcm4che.tool:dcm4che-tool-dcm2json</include>
         <include>org.dcm4che.tool:dcm4che-tool-dcm2pdf</include>
         <include>org.dcm4che.tool:dcm4che-tool-dcm2str</include>
         <include>org.dcm4che.tool:dcm4che-tool-dcm2xml</include>
+        <include>org.dcm4che.tool:dcm4che-tool-dcmconv</include>
         <include>org.dcm4che.tool:dcm4che-tool-dcmdir</include>
         <include>org.dcm4che.tool:dcm4che-tool-dcmldap</include>
         <include>org.dcm4che.tool:dcm4che-tool-dcmqrscp</include>
@@ -201,6 +204,7 @@
         <include>com.sun.xml.messaging.saaj:saaj-impl</include>
         <include>org.glassfish.gmbal:gmbal</include>
         <include>org.jvnet.mimepull:mimepull</include>
+        <include>info.picocli:picocli</include>
       </includes>
       <useProjectArtifact>false</useProjectArtifact>
     </dependencySet>

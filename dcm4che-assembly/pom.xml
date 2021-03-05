@@ -279,6 +279,11 @@
     </dependency>
     <dependency>
       <groupId>org.dcm4che.tool</groupId>
+      <artifactId>dcm4che-tool-dcm2img</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.dcm4che.tool</groupId>
       <artifactId>dcm4che-tool-dcm2jpg</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -300,6 +305,11 @@
     <dependency>
       <groupId>org.dcm4che.tool</groupId>
       <artifactId>dcm4che-tool-dcm2xml</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.dcm4che.tool</groupId>
+      <artifactId>dcm4che-tool-dcmconv</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
