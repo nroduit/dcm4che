@@ -45,6 +45,7 @@
   <el tag="7777xx12" keyword="PatientVerificationDateTime" vr="DT" vm="1">Patient Verification Date Time</el>
   <el tag="7777xx13" keyword="PatientVerificationStatus" vr="CS" vm="1">Patient Verification Status</el>
   <el tag="7777xx14" keyword="FailedVerificationsOfPatient" vr="US" vm="1">Failed Verifications of Patient</el>
+  <el tag="7777xx15" keyword="DominantPatientSequence" vr="SQ" vm="1">Dominant Patient Sequence</el>
   <el tag="7777xx20" keyword="StudyReceiveDateTime" vr="DT" vm="1">Study Receive Date Time</el>
   <el tag="7777xx21" keyword="StudyUpdateDateTime" vr="DT" vm="1">Study Update Date Time</el>
   <el tag="7777xx22" keyword="StudyAccessDateTime" vr="DT" vm="1">Study Access Date Time</el>
@@ -95,6 +96,8 @@
   <el tag="7777xx68" keyword="ReceivingApplicationEntityTitleOfSeries" vr="AE" vm="1">Receiving Application Entity Title of Series</el>
   <el tag="7777xx69" keyword="SendingPresentationAddressOfSeries" vr="UR" vm="1">Sending Presentation Address of Series</el>
   <el tag="7777xx6A" keyword="ReceivingPresentationAddressOfSeries" vr="UR" vm="1">Receiving Presentation Address of Series</el>
+  <el tag="7777xx70" keyword="MPPSCreateDateTime" vr="DT" vm="1">MPPS Create Date Time</el>
+  <el tag="7777xx71" keyword="MPPSUpdateDateTime" vr="DT" vm="1">MPPS Update Date Time</el>
   <el tag="7777xxE0" keyword="XRoadPersonStatus" vr="CS" vm="1">X-Road Person Status</el>
   <el tag="7777xxE1" keyword="XRoadDataStatus" vr="CS" vm="1">X-Road Data Status</el>
 </elements>

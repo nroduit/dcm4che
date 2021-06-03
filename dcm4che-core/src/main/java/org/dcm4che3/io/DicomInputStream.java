@@ -417,6 +417,10 @@ public class DicomInputStream extends FilterInputStream
       }
 
     public void readHeader() throws IOException {
+        readHeader(dis -> false);
+    }
+
+    public void readHeader(Predicate<DicomInputStream> stopPredicate) throws IOException {
         byte[] buf = buffer;
         tagPos = pos; 
         readFully(buf, 0, 8);
@@ -430,7 +434,13 @@ public class DicomInputStream extends FilterInputStream
         default:
             if (explicitVR) {
                 vr = VR.valueOf(encodedVR = ByteUtils.bytesToVR(buf, 4));
-                if (vr != null && vr.headerLength() == 8) {
+                if (vr == null) {
+                    vr = ElementDictionary.getStandardElementDictionary().vrOf(tag);
+                    if (!stopPredicate.test(this))
+                        LOG.warn("Unrecognized VR code: {}H for {} - treat as {}",
+                                TagUtils.shortToHexString(encodedVR), TagUtils.toString(tag), vr);
+                }
+                if (vr.headerLength() == 8) {
                     // This length can't overflow since length field is only 16 bits in this case.
                     length = ByteUtils.bytesToUShort(buf, 6, bigEndian);
                     return;
@@ -544,7 +554,7 @@ public class DicomInputStream extends FilterInputStream
         long endPos =  pos + (len & 0xffffffffL);
         while (undeflen || this.pos < endPos) {
             try {
-                readHeader();
+                readHeader(stopPredicate);
             } catch (EOFException e) {
                 if (undeflen && pos == tagPos)
                     break;
@@ -552,11 +562,6 @@ public class DicomInputStream extends FilterInputStream
             }
             if (stopPredicate.test(this))
                 break;
-            if (encodedVR != 0 && vr == null) {
-                LOG.warn("Unrecognized VR code: {}H - treat as UN",
-                        TagUtils.shortToHexString(encodedVR));
-                vr = VR.UN;
-            }
             if (vr != null) {
                 if (vr == VR.UN) {
                     vr = ElementDictionary.vrOf(tag,
@@ -592,8 +597,7 @@ public class DicomInputStream extends FilterInputStream
             readFragments(attrs, tag, vr);
         } else if (length == BulkData.MAGIC_LEN
                 && super.in instanceof ObjectInputStream) {
-            attrs.setValue(tag, vr, BulkData.deserializeFrom(
-                    (ObjectInputStream) super.in));
+            attrs.setValue(tag, vr, deserializeBulkData((ObjectInputStream) super.in));
         } else if (includeBulkDataURI) {
             attrs.setValue(tag, vr, bulkDataCreator.createBulkData(this));
         } else {
@@ -604,6 +608,14 @@ public class DicomInputStream extends FilterInputStream
                 attrs.setBytes(tag, vr, b);
             } else if (tag == Tag.FileMetaInformationGroupLength)
                 setFileMetaInformationGroupLength(b);
+        }
+    }
+
+    private Object deserializeBulkData(ObjectInputStream ois) throws IOException {
+        try {
+            return ois.readObject();
+        } catch (ClassNotFoundException e) {
+            throw new IOException(e);
         }
     }
 
@@ -687,7 +699,7 @@ public class DicomInputStream extends FilterInputStream
             frags.add(ByteUtils.EMPTY_BYTES);
         } else if (length == BulkData.MAGIC_LEN
                 && super.in instanceof ObjectInputStream) {
-            frags.add(BulkData.deserializeFrom((ObjectInputStream) super.in));
+            frags.add(deserializeBulkData((ObjectInputStream) super.in));
         } else if (includeBulkDataURI) {
             frags.add(bulkDataCreator.createBulkData(this));
         } else {
