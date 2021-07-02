@@ -38,32 +38,23 @@
 
 package org.dcm4che3.conf.ldap;
 
-import java.io.ByteArrayInputStream;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.util.*;
-
-import javax.naming.*;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.BasicAttribute;
-import javax.naming.directory.BasicAttributes;
-import javax.naming.directory.DirContext;
-import javax.naming.directory.ModificationItem;
-import javax.naming.directory.SearchControls;
-import javax.naming.directory.SearchResult;
-
-import org.dcm4che3.conf.api.ConfigurationChanges;
-import org.dcm4che3.conf.api.*;
 import org.dcm4che3.conf.api.ConfigurationException;
+import org.dcm4che3.conf.api.*;
 import org.dcm4che3.io.BasicBulkDataDescriptor;
 import org.dcm4che3.net.*;
 import org.dcm4che3.net.Connection.Protocol;
 import org.dcm4che3.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.naming.*;
+import javax.naming.directory.*;
+import java.io.ByteArrayInputStream;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.*;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -851,18 +842,26 @@ public final class LdapDicomConfiguration implements DicomConfiguration {
 
     private void markForUnregister(String deviceDN, List<String> dns)
             throws NamingException, ConfigurationException {
-        NamingEnumeration<SearchResult> ne =
+        NamingEnumeration<SearchResult> aets =
                 search(deviceDN, "(objectclass=dicomNetworkAE)", StringUtils.EMPTY_STRING);
         try {
-            while (ne.hasMore()) {
-                String rdn = ne.next().getName();
+            while (aets.hasMore()) {
+                String rdn = aets.next().getName();
                 if (!rdn.equals("dicomAETitle=*"))
                     dns.add(rdn + ',' + aetsRegistryDN);
-                if (!rdn.equals("dcmWebAppName=*"))
-                    dns.add(rdn + ',' + webAppsRegistryDN);
             }
         } finally {
-            LdapUtils.safeClose(ne);
+            LdapUtils.safeClose(aets);
+        }
+        NamingEnumeration<SearchResult> webApps =
+                search(deviceDN, "(objectclass=dcmWebApp", StringUtils.EMPTY_STRING);
+        try {
+            while (webApps.hasMore()) {
+                String rdn = webApps.next().getName();
+                dns.add(rdn + ',' + webAppsRegistryDN);
+            }
+        } finally {
+            LdapUtils.safeClose(webApps);
         }
         for (LdapDicomConfigurationExtension ext : extensions)
             ext.markForUnregister(deviceDN, dns);
