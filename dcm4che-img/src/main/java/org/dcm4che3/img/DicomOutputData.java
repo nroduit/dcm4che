@@ -2,7 +2,7 @@
  * Copyright (c) 2021 Weasis Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0, or the Apache
+ * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
  * License, Version 2.0 which is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
@@ -12,7 +12,9 @@ package org.dcm4che3.img;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.dcm4che3.data.Attributes;
@@ -23,6 +25,7 @@ import org.dcm4che3.image.PhotometricInterpretation;
 import org.dcm4che3.imageio.codec.TransferSyntaxType;
 import org.dcm4che3.img.stream.ImageDescriptor;
 import org.dcm4che3.img.util.DicomUtils;
+import org.dcm4che3.img.util.SupplierEx;
 import org.dcm4che3.io.DicomOutputStream;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -37,27 +40,44 @@ import org.weasis.opencv.data.PlanarImage;
 public class DicomOutputData {
   private static final Logger LOGGER = LoggerFactory.getLogger(DicomOutputData.class);
 
-  private final List<PlanarImage> images;
+  private final List<SupplierEx<PlanarImage, IOException>> images;
   private final ImageDescriptor desc;
   private final String tsuid;
 
-  public DicomOutputData(List<PlanarImage> images, ImageDescriptor desc, String tsuid) {
-    this.images = Objects.requireNonNull(images);
+  public DicomOutputData(
+      List<SupplierEx<PlanarImage, IOException>> images, ImageDescriptor desc, String tsuid)
+      throws IOException {
+    if (images.isEmpty()) {
+      throw new IllegalStateException("No image found!");
+    }
+    PlanarImage firstImage = images.get(0).get();
+    this.images = new ArrayList<>(Objects.requireNonNull(images));
+    this.images.set(0, () -> firstImage);
     this.desc = Objects.requireNonNull(desc);
-    this.tsuid = Objects.requireNonNull(tsuid);
-    if (!isSupportedSyntax(tsuid)) {
-      throw new IllegalStateException(tsuid + " is not supported as encoding syntax!");
-    }
-    if (images.stream().anyMatch(img -> img.width() < 1 || img.height() < 1)) {
-      throw new IllegalStateException("Image is empty!");
+    int type = CvType.depth(firstImage.type());
+    this.tsuid =
+        DicomOutputData.adaptSuitableSyntax(
+            desc.getBitsStored(), type, Objects.requireNonNull(tsuid));
+    if (!isSupportedSyntax(this.tsuid)) {
+      throw new IllegalStateException(this.tsuid + " is not supported as encoding syntax!");
     }
   }
 
-  public DicomOutputData(PlanarImage image, ImageDescriptor desc, String tsuid) {
-    this(Arrays.asList(image), desc, tsuid);
+  public DicomOutputData(
+      SupplierEx<PlanarImage, IOException> image, ImageDescriptor desc, String tsuid)
+      throws IOException {
+    this(Collections.singletonList(image), desc, tsuid);
   }
 
-  public List<PlanarImage> getImages() {
+  public DicomOutputData(PlanarImage image, ImageDescriptor desc, String tsuid) throws IOException {
+    this(Collections.singletonList(() -> image), desc, tsuid);
+  }
+
+  public SupplierEx<PlanarImage, IOException> getFistImage() {
+    return images.get(0);
+  }
+
+  public List<SupplierEx<PlanarImage, IOException>> getImages() {
     return images;
   }
 
@@ -70,17 +90,20 @@ public class DicomOutputData {
     Mat buf = null;
     MatOfInt dicomParams = null;
     boolean first = true;
+    PlanarImage img = getFistImage().get();
     try {
       dicomParams = new MatOfInt(params);
-      for (PlanarImage image : images) {
-        buf = Imgcodecs.dicomJpgWrite(DicomImageUtils.bgr2rgb(image).toMat(), dicomParams, "");
+      for (SupplierEx<PlanarImage, IOException> supplier : images) {
+        buf =
+            Imgcodecs.dicomJpgWrite(
+                DicomImageUtils.bgr2rgb(supplier.get()).toMat(), dicomParams, "");
         if (buf.empty()) {
           throw new IOException("Native encoding error: null image");
         }
         int compressedLength = buf.width() * buf.height() * (int) buf.elemSize();
         if (first) {
           first = false;
-          double uncompressed = image.width() * image.height() * (double) image.elemSize();
+          double uncompressed = img.width() * img.height() * (double) img.elemSize();
           adaptCompressionRatio(dataSet, params, uncompressed / compressedLength);
           dos.writeDataset(null, dataSet);
           dos.writeHeader(Tag.PixelData, VR.OB, -1);
@@ -141,20 +164,20 @@ public class DicomOutputData {
 
   public void writRawImageData(DicomOutputStream dos, Attributes data) {
     try {
-      PlanarImage img = images.get(0);
-      adaptTagsToRawImage(data, img, desc);
+      PlanarImage fistImage = getFistImage().get();
+      adaptTagsToRawImage(data, fistImage, desc);
       dos.writeDataset(null, data);
 
-      int type = CvType.depth(img.type());
-      int imgSize = img.width() * img.height();
-      int channels = CvType.channels(img.type());
-      int length = images.size() * imgSize * (int) img.elemSize();
+      int type = CvType.depth(fistImage.type());
+      int imgSize = fistImage.width() * fistImage.height();
+      int channels = CvType.channels(fistImage.type());
+      int length = images.size() * imgSize * (int) fistImage.elemSize();
       dos.writeHeader(Tag.PixelData, VR.OB, length);
 
       if (type <= CvType.CV_8S) {
         byte[] srcData = new byte[imgSize * channels];
-        for (PlanarImage image : images) {
-          img = DicomImageUtils.bgr2rgb(image);
+        for (SupplierEx<PlanarImage, IOException> image : images) {
+          PlanarImage img = DicomImageUtils.bgr2rgb(image.get());
           img.get(0, 0, srcData);
           dos.write(srcData);
         }
@@ -162,8 +185,8 @@ public class DicomOutputData {
         short[] srcData = new short[imgSize * channels];
         ByteBuffer bb = ByteBuffer.allocate(srcData.length * 2);
         bb.order(ByteOrder.LITTLE_ENDIAN);
-        for (PlanarImage image : images) {
-          img = DicomImageUtils.bgr2rgb(image);
+        for (SupplierEx<PlanarImage, IOException> image : images) {
+          PlanarImage img = DicomImageUtils.bgr2rgb(image.get());
           img.get(0, 0, srcData);
           bb.asShortBuffer().put(srcData);
           dos.write(bb.array());
@@ -172,8 +195,8 @@ public class DicomOutputData {
         int[] srcData = new int[imgSize * channels];
         ByteBuffer bb = ByteBuffer.allocate(srcData.length * 4);
         bb.order(ByteOrder.LITTLE_ENDIAN);
-        for (PlanarImage image : images) {
-          img = DicomImageUtils.bgr2rgb(image);
+        for (SupplierEx<PlanarImage, IOException> image : images) {
+          PlanarImage img = DicomImageUtils.bgr2rgb(image.get());
           img.get(0, 0, srcData);
           bb.asIntBuffer().put(srcData);
           dos.write(bb.array());
@@ -182,8 +205,8 @@ public class DicomOutputData {
         float[] srcData = new float[imgSize * channels];
         ByteBuffer bb = ByteBuffer.allocate(srcData.length * 4);
         bb.order(ByteOrder.LITTLE_ENDIAN);
-        for (PlanarImage image : images) {
-          img = DicomImageUtils.bgr2rgb(image);
+        for (SupplierEx<PlanarImage, IOException> image : images) {
+          PlanarImage img = DicomImageUtils.bgr2rgb(image.get());
           img.get(0, 0, srcData);
           bb.asFloatBuffer().put(srcData);
           dos.write(bb.array());
@@ -192,8 +215,8 @@ public class DicomOutputData {
         double[] srcData = new double[imgSize * channels];
         ByteBuffer bb = ByteBuffer.allocate(srcData.length * 8);
         bb.order(ByteOrder.LITTLE_ENDIAN);
-        for (PlanarImage image : images) {
-          img = DicomImageUtils.bgr2rgb(image);
+        for (SupplierEx<PlanarImage, IOException> image : images) {
+          PlanarImage img = DicomImageUtils.bgr2rgb(image.get());
           img.get(0, 0, srcData);
           bb.asDoubleBuffer().put(srcData);
           dos.write(bb.array());
@@ -339,6 +362,18 @@ public class DicomOutputData {
         return type <= CvType.CV_16S ? dstTsuid : UID.ExplicitVRLittleEndian;
       default:
         return dstTsuid;
+    }
+  }
+
+  public static boolean isAdaptableSyntax(String uid) {
+    switch (uid) {
+      case UID.JPEGBaseline8Bit:
+      case UID.JPEGExtended12Bit:
+      case UID.JPEGSpectralSelectionNonHierarchical68:
+      case UID.JPEGFullProgressionNonHierarchical1012:
+        return true;
+      default:
+        return false;
     }
   }
 

@@ -2,7 +2,7 @@
  * Copyright (c) 2021 Weasis Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0, or the Apache
+ * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
  * License, Version 2.0 which is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
@@ -11,7 +11,6 @@ package org.dcm4che3.img;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
@@ -21,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
 import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
 import javax.imageio.ImageTypeSpecifier;
@@ -41,6 +40,8 @@ import org.dcm4che3.img.stream.DicomFileInputStream;
 import org.dcm4che3.img.stream.ExtendSegmentedInputImageStream;
 import org.dcm4che3.img.stream.ImageDescriptor;
 import org.dcm4che3.img.stream.SeekableInMemoryByteChannel;
+import org.dcm4che3.img.util.Editable;
+import org.dcm4che3.img.util.SupplierEx;
 import org.dcm4che3.io.BulkDataDescriptor;
 import org.dcm4che3.io.DicomInputStream.IncludeBulkData;
 import org.dcm4che3.util.TagUtils;
@@ -68,7 +69,7 @@ import org.weasis.opencv.op.ImageProcessor;
  * @author Nicolas Roduit
  * @since Jan 2020
  */
-public class DicomImageReader extends ImageReader implements Closeable {
+public class DicomImageReader extends ImageReader {
 
   private static final Logger LOG = LoggerFactory.getLogger(DicomImageReader.class);
 
@@ -249,38 +250,18 @@ public class DicomImageReader extends ImageReader implements Closeable {
     resetInternalState();
   }
 
-  @Override
-  public void close() {
-    dispose();
-  }
-
   private boolean fileYbr2rgb(
       PhotometricInterpretation pmi,
       String tsuid,
       ExtendSegmentedInputImageStream seg,
       int frame,
       DicomImageReadParam param) {
-    Supplier<Boolean> isYbrModel =
+    BooleanSupplier isYbrModel =
         () -> {
           try (SeekableByteChannel channel =
               Files.newByteChannel(dis.getPath(), StandardOpenOption.READ)) {
             channel.position(seg.getSegmentPositions()[frame]);
-            channel.truncate(seg.getSegmentLengths()[frame]);
-            JPEGParser parser = new JPEGParser(channel);
-            Attributes attributes = parser.getAttributes(null);
-            if (!TransferSyntaxType.isLossyCompression(
-                attributes.getString(Tag.TransferSyntaxUID, ""))) {
-              return false;
-            }
-            if (pmi == PhotometricInterpretation.RGB
-                && !param.getKeepRgbForLossyJpeg().orElse(false)) {
-              // Force JPEG Baseline (1.2.840.10008.1.2.4.50) to YBR_FULL_422 color model when RGB
-              // with JFIF
-              // header (error made by some constructors). RGB color model doesn't make sense for
-              // lossy jpeg with
-              // JFIF header.
-              return !"RGB".equals(attributes.getString(Tag.PhotometricInterpretation));
-            }
+            return isYbrModel(channel, pmi, param);
           } catch (IOException e) {
             LOG.error("Cannot read jpeg header", e);
           }
@@ -289,23 +270,30 @@ public class DicomImageReader extends ImageReader implements Closeable {
     return ybr2rgb(pmi, tsuid, isYbrModel);
   }
 
+  private static boolean isYbrModel(
+      SeekableByteChannel channel, PhotometricInterpretation pmi, DicomImageReadParam param)
+      throws IOException {
+    JPEGParser parser = new JPEGParser(channel);
+    Attributes attributes = parser.getAttributes(null);
+    if (!TransferSyntaxType.isLossyCompression(attributes.getString(Tag.TransferSyntaxUID, ""))) {
+      return false;
+    }
+    if (pmi == PhotometricInterpretation.RGB && !param.getKeepRgbForLossyJpeg().orElse(false)) {
+      // Force JPEG Baseline (1.2.840.10008.1.2.4.50) to YBR_FULL_422 color model when RGB with
+      // JFIF header (error made by some constructors). RGB color model doesn't make sense for
+      // lossy jpeg with JFIF header.
+      return !"RGB".equals(attributes.getString(Tag.PhotometricInterpretation));
+    }
+    return false;
+  }
+
   private boolean byteYbr2rgb(
       PhotometricInterpretation pmi, String tsuid, int frame, DicomImageReadParam param) {
-    Supplier<Boolean> isYbrModel =
+    BooleanSupplier isYbrModel =
         () -> {
-          try {
-            byte[] b = bdis.getBytes(frame).array();
-            SeekableInMemoryByteChannel channel = new SeekableInMemoryByteChannel(b);
-            JPEGParser parser = new JPEGParser(channel);
-            Attributes attributes = parser.getAttributes(null);
-            if (!TransferSyntaxType.isLossyCompression(
-                attributes.getString(Tag.TransferSyntaxUID, ""))) {
-              return false;
-            }
-            if (pmi == PhotometricInterpretation.RGB
-                && !param.getKeepRgbForLossyJpeg().orElse(false)) {
-              return !"RGB".equals(attributes.getString(Tag.PhotometricInterpretation));
-            }
+          try (SeekableInMemoryByteChannel channel =
+              new SeekableInMemoryByteChannel(bdis.getBytes(frame).array())) {
+            return isYbrModel(channel, pmi, param);
           } catch (Exception e) {
             LOG.error("Cannot read jpeg header", e);
           }
@@ -315,7 +303,7 @@ public class DicomImageReader extends ImageReader implements Closeable {
   }
 
   private static boolean ybr2rgb(
-      PhotometricInterpretation pmi, String tsuid, Supplier<Boolean> isYbrModel) {
+      PhotometricInterpretation pmi, String tsuid, BooleanSupplier isYbrModel) {
     // Option only for IJG native decoder
     switch (pmi) {
       case MONOCHROME1:
@@ -334,12 +322,30 @@ public class DicomImageReader extends ImageReader implements Closeable {
       case UID.JPEGSpectralSelectionNonHierarchical68:
       case UID.JPEGFullProgressionNonHierarchical1012:
         if (pmi == PhotometricInterpretation.RGB) {
-          return isYbrModel.get();
+          return isYbrModel.getAsBoolean();
         }
         return true;
       default:
         return false;
     }
+  }
+
+  public List<SupplierEx<PlanarImage, IOException>> getLazyPlanarImages(
+      DicomImageReadParam param, Editable<PlanarImage> editor) {
+    int size = getImageDescriptor().getFrames();
+    List<SupplierEx<PlanarImage, IOException>> suppliers = new ArrayList<>(size);
+    for (int i = 0; i < size; i++) {
+      final int index = i;
+      suppliers.add(
+          () -> {
+            PlanarImage img = getPlanarImage(index, param);
+            if (editor == null) {
+              return img;
+            }
+            return editor.process(img);
+          });
+    }
+    return suppliers;
   }
 
   public List<PlanarImage> getPlanarImages() throws IOException {
@@ -506,7 +512,6 @@ public class DicomImageReader extends ImageReader implements Closeable {
 
     ImageDescriptor desc = getImageDescriptor();
     int bitsStored = desc.getBitsStored();
-    //   boolean floatPixData = false; // TODO getFloatPixel
 
     String tsuid = bdis.getTransferSyntax();
     TransferSyntaxType type = TransferSyntaxType.forUID(tsuid);
@@ -518,13 +523,12 @@ public class DicomImageReader extends ImageReader implements Closeable {
     if (!rawData && byteYbr2rgb(desc.getPhotometricInterpretation(), tsuid, frame, param)) {
       dcmFlags |= Imgcodecs.DICOM_FLAG_YBR;
     }
-    //    boolean bigendian = false; // TODO is always false
-    //    if (bigendian) {
-    //      dcmFlags |= Imgcodecs.DICOM_FLAG_BIGENDIAN;
-    //    }
-    //    if (floatPixData) {
-    //      dcmFlags |= Imgcodecs.DICOM_FLAG_FLOAT;
-    //    }
+    if (bdis.bigEndian()) {
+      dcmFlags |= Imgcodecs.DICOM_FLAG_BIGENDIAN;
+    }
+    if (bdis.floatPixelData()) {
+      dcmFlags |= Imgcodecs.DICOM_FLAG_FLOAT;
+    }
     if (UID.RLELossless.equals(tsuid)) {
       dcmFlags |= Imgcodecs.DICOM_FLAG_RLE;
     }
@@ -536,6 +540,7 @@ public class DicomImageReader extends ImageReader implements Closeable {
       buf.put(0, 0, b.array());
       if (rawData) {
         int bits = bitsStored <= 8 && desc.getBitsAllocated() > 8 ? 9 : bitsStored; // Fix #94
+        int streamVR = bdis.getPixelDataVR().numEndianBytes();
         MatOfInt dicomparams =
             new MatOfInt(
                 Imgcodecs.IMREAD_UNCHANGED,
@@ -545,7 +550,8 @@ public class DicomImageReader extends ImageReader implements Closeable {
                 Imgcodecs.DICOM_CP_UNKNOWN,
                 desc.getSamples(),
                 bits,
-                desc.isBanded() ? Imgcodecs.ILV_NONE : Imgcodecs.ILV_SAMPLE);
+                desc.isBanded() ? Imgcodecs.ILV_NONE : Imgcodecs.ILV_SAMPLE,
+                streamVR);
         return ImageCV.toImageCV(
             Imgcodecs.dicomRawMatRead(
                 buf, dicomparams, desc.getPhotometricInterpretation().name()));
@@ -576,7 +582,7 @@ public class DicomImageReader extends ImageReader implements Closeable {
                   desc.getColumns(), desc.getRows(), desc.getSamples(), desc.getBitsAllocated());
       offsets = new long[1];
       length = new int[offsets.length];
-      offsets[0] = bulkData.offset() + frameIndex * frameLength;
+      offsets[0] = bulkData.offset() + (long) frameIndex * frameLength;
       length[0] = frameLength;
     } else if (hasFragments) {
       int nbFragments = fragments.size();
@@ -607,7 +613,6 @@ public class DicomImageReader extends ImageReader implements Closeable {
               for (int i = 1; i < nbFragments; i++) {
                 BulkData b = (BulkData) fragments.get(i);
                 channel.position(b.offset());
-                channel.truncate(b.length());
                 try {
                   new JPEGParser(channel);
                   fragmentsPositions.add(i);
@@ -641,5 +646,29 @@ public class DicomImageReader extends ImageReader implements Closeable {
       throw new IOException("Neither fragments nor BulkData!");
     }
     return new ExtendSegmentedInputImageStream(dis.getPath(), offsets, length, desc);
+  }
+
+  public static boolean isSupportedSyntax(String uid) {
+    switch (uid) {
+      case UID.ImplicitVRLittleEndian:
+      case UID.ExplicitVRLittleEndian:
+      case UID.ExplicitVRBigEndian:
+      case UID.RLELossless:
+      case UID.JPEGBaseline8Bit:
+      case UID.JPEGExtended12Bit:
+      case UID.JPEGSpectralSelectionNonHierarchical68:
+      case UID.JPEGFullProgressionNonHierarchical1012:
+      case UID.JPEGLossless:
+      case UID.JPEGLosslessSV1:
+      case UID.JPEGLSLossless:
+      case UID.JPEGLSNearLossless:
+      case UID.JPEG2000Lossless:
+      case UID.JPEG2000:
+      case UID.JPEG2000MCLossless:
+      case UID.JPEG2000MC:
+        return true;
+      default:
+        return false;
+    }
   }
 }

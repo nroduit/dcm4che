@@ -2,7 +2,7 @@
  * Copyright (c) 2021 Weasis Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0, or the Apache
+ * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
  * License, Version 2.0 which is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
@@ -29,7 +29,7 @@ public class ImageRenderingTest {
 
   @Test
   public void getModalityLutImage_Statistics() throws Exception {
-    Path in = Paths.get("target/test-data/", "mono2-CT-16bit.dcm");
+    Path in = Paths.get(DicomImageReaderTest.class.getResource("mono2-CT-16bit.dcm").toURI());
     DicomImageReadParam readParam = new DicomImageReadParam();
     Polygon polygon = new Polygon();
     polygon.addPoint(150, 200);
@@ -50,34 +50,32 @@ public class ImageRenderingTest {
     if (!StringUtil.hasText(srcPath)) {
       throw new IllegalStateException("Path cannot be empty");
     }
-    try (DicomImageReader reader = new DicomImageReader(Transcoder.dicomImageReaderSpi)) {
-      reader.setInput(new DicomFileInputStream(srcPath));
-      ImageDescriptor desc = reader.getImageDescriptor();
-      for (int i = 0; i < desc.getFrames(); i++) {
-        PlanarImage img = reader.getPlanarImage(i, params);
-        img = ImageRendering.getRawRenderedImage(img, desc, params);
+    DicomImageReader reader = new DicomImageReader(Transcoder.dicomImageReaderSpi);
+    reader.setInput(new DicomFileInputStream(srcPath));
+    ImageDescriptor desc = reader.getImageDescriptor();
 
-        double[][] val =
-            ImageProcessor.meanStdDev(
-                img.toMat(), shape, desc.getPixelPaddingValue(), desc.getPixelPaddingRangeLimit());
-        if (val != null) {
-          DecimalFormat df = new DecimalFormat("#.00");
-          StringBuilder b = new StringBuilder("Image path: ");
-          b.append(srcPath);
-          b.append("\nPixel statistics of real values:");
-          b.append("\n\tMin: ");
-          b.append(DoubleStream.of(val[0]).mapToObj(df::format).collect(Collectors.joining(" ")));
-          b.append("\n\tMax: ");
-          b.append(DoubleStream.of(val[1]).mapToObj(df::format).collect(Collectors.joining(" ")));
-          b.append("\n\tMean: ");
-          b.append(DoubleStream.of(val[2]).mapToObj(df::format).collect(Collectors.joining(" ")));
-          b.append("\n\tStd: ");
-          b.append(DoubleStream.of(val[3]).mapToObj(df::format).collect(Collectors.joining(" ")));
-          System.out.print(b.toString());
-        }
-        return val;
-      }
+    PlanarImage img = reader.getPlanarImage(0, params);
+    img = ImageRendering.getRawRenderedImage(img, desc, params);
+
+    double[][] val =
+        ImageProcessor.meanStdDev(
+            img.toMat(), shape, desc.getPixelPaddingValue(), desc.getPixelPaddingRangeLimit());
+    if (val != null) {
+      DecimalFormat df = new DecimalFormat("#.00");
+      StringBuilder b = new StringBuilder("Image path: ");
+      b.append(srcPath);
+      b.append("\nPixel statistics of real values:");
+      b.append("\n\tMin: ");
+      b.append(DoubleStream.of(val[0]).mapToObj(df::format).collect(Collectors.joining(" ")));
+      b.append("\n\tMax: ");
+      b.append(DoubleStream.of(val[1]).mapToObj(df::format).collect(Collectors.joining(" ")));
+      b.append("\n\tMean: ");
+      b.append(DoubleStream.of(val[2]).mapToObj(df::format).collect(Collectors.joining(" ")));
+      b.append("\n\tStd: ");
+      b.append(DoubleStream.of(val[3]).mapToObj(df::format).collect(Collectors.joining(" ")));
+      System.out.print(b);
     }
-    return null;
+    reader.dispose();
+    return val;
   }
 }

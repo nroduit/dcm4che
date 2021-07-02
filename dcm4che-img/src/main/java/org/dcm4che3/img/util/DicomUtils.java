@@ -2,7 +2,7 @@
  * Copyright (c) 2009-2021 Weasis Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0, or the Apache
+ * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
  * License, Version 2.0 which is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
@@ -61,6 +61,17 @@ public class DicomUtils {
     }
   }
 
+  public static boolean isNative(String uid) {
+    switch (uid) {
+      case UID.ImplicitVRLittleEndian:
+      case UID.ExplicitVRLittleEndian:
+      case UID.ExplicitVRBigEndian:
+        return true;
+      default:
+        return false;
+    }
+  }
+
   public static String getFormattedText(Object value, String format) {
     if (value == null) {
       return StringUtil.EMPTY_STRING;
@@ -71,7 +82,7 @@ public class DicomUtils {
     if (value instanceof String) {
       str = (String) value;
     } else if (value instanceof String[]) {
-      str = Arrays.asList((String[]) value).stream().collect(Collectors.joining("\\"));
+      str = String.join("\\", Arrays.asList((String[]) value));
     } else if (value instanceof TemporalAccessor) {
       str = DateTimeUtils.formatDateTime((TemporalAccessor) value);
     } else if (value instanceof TemporalAccessor[]) {
@@ -173,7 +184,7 @@ public class DicomUtils {
     }
     StringBuilder sb = new StringBuilder(s[0]);
     for (int i = 1; i < s.length; i++) {
-      sb.append("\\" + s[i]);
+      sb.append("\\").append(s[i]);
     }
     return sb.toString();
   }

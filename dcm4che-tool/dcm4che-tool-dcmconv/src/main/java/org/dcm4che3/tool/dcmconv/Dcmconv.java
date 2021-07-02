@@ -74,13 +74,13 @@ public class Dcmconv implements Callable<Integer> {
 
   @CommandLine.Option(
       names = "-N",
-      description = "Near-Lossless parameter of JPEG LS Lossy compression (0 to n).")
+      description = "Near-Lossless parameter of JPEG-LS Lossy compression (0 to n).")
   Integer nearLosslessError = 3;
 
     @CommandLine.Option(names = "-q", description = "Lossy JPEG compression quality between 1 to 100 (100 is the best lossy quality).")
     Integer jpegCompressionQuality = 80;
 
-    @CommandLine.Option(names = "-Q", description = "Lossy JPEG200 compression factor between 5 to 100 (5 is near lossless).")
+    @CommandLine.Option(names = "-Q", description = "Lossy JPEG2000 compression factor between 5 to 100 (5 is near lossless).")
     Integer compressionRatiofactor = 10;
 
     @CommandLine.Option(names = "--rgb-lossy", negatable = true, description = "Keep RGB model with JPEG lossy." +

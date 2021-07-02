@@ -2,7 +2,7 @@
  * Copyright (c) 2009-2021 Weasis Team and other contributors.
  *
  * This program and the accompanying materials are made available under the terms of the Eclipse
- * Public License 2.0 which is available at http://www.eclipse.org/legal/epl-2.0, or the Apache
+ * Public License 2.0 which is available at https://www.eclipse.org/legal/epl-2.0, or the Apache
  * License, Version 2.0 which is available at https://www.apache.org/licenses/LICENSE-2.0.
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
@@ -115,7 +115,7 @@ public class DateTimeUtils {
           .toFormatter();
 
   public static LocalDate parseDA(String value) {
-    return LocalDate.from(DA_PARSER.parse(value));
+    return LocalDate.from(DA_PARSER.parse(value.trim()));
   }
 
   public static String formatDA(Temporal value) {
@@ -123,7 +123,7 @@ public class DateTimeUtils {
   }
 
   public static LocalTime parseTM(String value) {
-    return LocalTime.from(TM_PARSER.parse(value));
+    return LocalTime.from(TM_PARSER.parse(value.trim()));
   }
 
   public static LocalTime parseTMMax(String value) {
@@ -135,7 +135,7 @@ public class DateTimeUtils {
   }
 
   public static Temporal parseDT(String value) {
-    TemporalAccessor temporal = DT_PARSER.parse(value);
+    TemporalAccessor temporal = DT_PARSER.parse(value.trim());
     LocalDate date =
         temporal.isSupported(DAY_OF_MONTH)
             ? LocalDate.from(temporal)
