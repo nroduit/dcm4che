@@ -26,6 +26,7 @@ import java.time.LocalTime;
 import java.time.Month;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import org.dcm4che3.data.Attributes;
@@ -65,8 +66,8 @@ public class DicomObjectUtilTest {
   public void testIsImageFrameApplicableToReferencedImageSequence() {
     ArrayList<Attributes> attributesList = new ArrayList<>();
 
-    List<Integer> images = List.of(1, 2, 3);
-    List<int[]> frames = List.of(new int[] {}, new int[] {1}, new int[] {1, 3});
+    List<Integer> images = Arrays.asList(1, 2, 3);
+    List<int[]> frames = Arrays.asList(new int[] {}, new int[] {1}, new int[] {1, 3});
 
     Attributes rfs = new Attributes(2);
     String seriesUID = "1.2.3.4.5.1.";

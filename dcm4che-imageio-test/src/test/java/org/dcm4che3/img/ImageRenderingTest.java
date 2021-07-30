@@ -29,7 +29,7 @@ public class ImageRenderingTest {
 
   @Test
   public void getModalityLutImage_Statistics() throws Exception {
-    Path in = Paths.get(DicomImageReaderTest.class.getResource("mono2-CT-16bit.dcm").toURI());
+    Path in = Paths.get("target/test-data/mono2-CT-16bit.dcm");
     DicomImageReadParam readParam = new DicomImageReadParam();
     Polygon polygon = new Polygon();
     polygon.addPoint(150, 200);

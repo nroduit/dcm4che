@@ -25,8 +25,8 @@ public class CIELabTest {
 
   @Test
   public void testDicomLab2rgb() {
-    assertNull(CIELab.dicomLab2rgb(new int[] {1, 1, 1, 1}));
-    assertNull(CIELab.dicomLab2rgb(null));
+    assertArrayEquals(new int[0], CIELab.dicomLab2rgb(new int[] {1, 1, 1, 1}));
+    assertArrayEquals(new int[0], CIELab.dicomLab2rgb(null));
 
     assertArrayEquals(rgb1, CIELab.dicomLab2rgb(dcmLab1));
     assertArrayEquals(rgb2, CIELab.dicomLab2rgb(dcmLab2));

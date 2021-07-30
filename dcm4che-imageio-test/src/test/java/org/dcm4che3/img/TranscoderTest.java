@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -42,7 +43,7 @@ import org.weasis.opencv.op.ImageProcessor;
 @RunWith(Enclosed.class)
 public class TranscoderTest {
 
-  static Path IN_DIR = FileSystems.getDefault().getPath("target/test-classes/org/dcm4che3/img");
+  static Path IN_DIR = Paths.get("target/test-data/");
   static final Path OUT_DIR = FileSystems.getDefault().getPath("target/test-out/");
   private static DicomImageReader reader = new DicomImageReader(new DicomImageReaderSpi());
 
@@ -244,7 +245,7 @@ public class TranscoderTest {
       return reader.getPlanarImages(null);
     } else {
       return files.stream()
-          .map(p -> ImageProcessor.readImageWithCvException(p.toFile()))
+          .map(p -> ImageProcessor.readImageWithCvException(p.toFile(), null))
           .collect(Collectors.toList());
     }
   }
@@ -254,7 +255,7 @@ public class TranscoderTest {
       reader.setInput(new DicomFileInputStream(path));
       return reader.getPlanarImages(null);
     } else {
-      return Arrays.asList(ImageProcessor.readImageWithCvException(path.toFile()));
+      return Arrays.asList(ImageProcessor.readImageWithCvException(path.toFile(), null));
     }
   }
 

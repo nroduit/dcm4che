@@ -104,7 +104,7 @@ public class Dcmconv implements Callable<Integer> {
         }
 
         System.out.printf("Converting all the images to %s [%s].%n", syntax.name, syntax.uid);
-        long startTime = System.nanoTime();
+        long startTime = System.currentTimeMillis();
         for (Path p: paths) {
             if(Files.isDirectory(p)) {
                 try (Stream<Path> walk = Files.walk(p)) {
@@ -131,13 +131,12 @@ public class Dcmconv implements Callable<Integer> {
                 System.out.printf("Transcode \"%s\" in \"%s\".%n", p, outDir);
             }
         }
-        long elapsedTime = System.nanoTime() - startTime;
-        if(elapsedTime < 10_000_000_000L) {
-            long ms =  TimeUnit.MILLISECONDS.convert(elapsedTime, TimeUnit.NANOSECONDS);
-            System.out.println("Convert in" + ms + " milliseconds");
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        if(elapsedTime < 10_000L) {
+            System.out.println("Convert in" + elapsedTime + " milliseconds");
         }
         else {
-            long sec = TimeUnit.SECONDS.convert(elapsedTime, TimeUnit.NANOSECONDS);
+            long sec = TimeUnit.SECONDS.convert(elapsedTime, TimeUnit.MILLISECONDS);
             System.out.println(sec + " seconds");
         }
         return 0;

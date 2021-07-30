@@ -108,7 +108,7 @@ public class TranscoderTest {
 
     @Test
     public void testDecompressJpeglsPaletteMF() throws Exception {
-        test("jpeg-ls-Palette.dcm", "jpeg-ls-Palette-raw.dcm", UID.ExplicitVRLittleEndian, true);
+        test("palette-multiframe-jpeg-ls.dcm", "palette-multiframe-jpeg-ls-raw.dcm", UID.ExplicitVRLittleEndian, true);
     }
 
     @Test
@@ -143,22 +143,22 @@ public class TranscoderTest {
 
     @Test
     public void testTranscodeJpeglsPaletteMf2RgbJ2k() throws Exception {
-        test("jpeg-ls-Palette.dcm", "jpeg-ls-Palette-j2k.dcm", UID.JPEG2000, true);
+        test("palette-multiframe-jpeg-ls.dcm", "palette-multiframe-jpeg-ls-j2k.dcm", UID.JPEG2000, true);
     }
 
     @Test
     public void testTranscodeYbrFullRle2RgbJ2k() throws Exception {
-        test("YBR_FULL-RLE.dcm", "YBR_FULL-RLE-j2k.dcm", UID.JPEG2000, true);
+        test("ybrFull-RLE.dcm", "ybrFull-RLE.dcm-j2k.dcm", UID.JPEG2000, true);
     }
 
     @Test
     public void testTranscodeYbr422Raw2RgbJpegLossless() throws Exception {
-        test("YBR_422.dcm", "YBR_422-jpegLossless.dcm", UID.JPEGLosslessSV1, true);
+        test("ybr422-raw.dcm", "ybr422-jpegLossless.dcm", UID.JPEGLosslessSV1, true);
     }
 
     @Test
     public void testTranscodeYbr422Raw2RgbJ2k() throws Exception {
-        test("YBR_422.dcm", "YBR_422-j2k.dcm", UID.JPEG2000, true);
+        test("ybr422-raw.dcm", "ybr422-j2k.dcm", UID.JPEG2000, true);
     }
 
     @Test

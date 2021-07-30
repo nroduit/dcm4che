@@ -46,7 +46,7 @@
     <remoteResources>
         <remoteResource>cplx_p02.dcm</remoteResource>
         <remoteResource>DICOMDIR</remoteResource>
-        <remoteResource>jpeg-ls-Palette.dcm</remoteResource>
+        <remoteResource>palette-multiframe-jpeg-ls.dcm</remoteResource>
         <remoteResource>MR2_UNC</remoteResource>
         <remoteResource>NM-MONO2-16-13x-heart</remoteResource>
         <remoteResource>NM1_JPLY</remoteResource>
@@ -57,8 +57,8 @@
         <remoteResource>US-PAL-8-10x-echo</remoteResource>
         <remoteResource>US-RGB-8-epicard</remoteResource>
         <remoteResource>US-RGB-8-esopecho</remoteResource>
-        <remoteResource>YBR_422.dcm</remoteResource>
-        <remoteResource>YBR_FULL-RLE.dcm</remoteResource>
+        <remoteResource>ybr422-raw.dcm</remoteResource>
+        <remoteResource>ybrFull-RLE.dcm</remoteResource>
         <remoteResource>3gb-bulk-data-truncated</remoteResource>
         <remoteResource>expected_imgForPrLUT.png</remoteResource>
         <remoteResource>expected_overlay.png</remoteResource>

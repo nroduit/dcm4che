@@ -9,6 +9,8 @@
  */
 package org.dcm4che3.img.util;
 
+/** @author Nicolas Roduit */
+
 @FunctionalInterface
 public interface SupplierEx<T, E extends Exception> {
 

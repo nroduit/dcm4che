@@ -67,8 +67,8 @@ public class PrDicomObject implements PresentationStateLut {
 
     Attributes dcmLut = dcmPR.getNestedDataset(Tag.PresentationLUTSequence);
     if (dcmLut != null) {
-      /**
-       * @see <a
+      /*
+        @see <a
        *     href="http://dicom.nema.org/medical/Dicom/current/output/chtml/part03/sect_C.11.6.html">C.11.6
        *     Softcopy Presentation LUT Module</a>
        *     <p>Presentation LUT Module is always implicitly specified to apply over the full range
@@ -77,7 +77,7 @@ public class PrDicomObject implements PresentationStateLut {
        */
       this.prLut = DicomImageUtils.createLut(dcmLut);
       this.prLutExplanation = Optional.ofNullable(dcmPR.getString(Tag.LUTExplanation));
-      this.prLUTShapeMode = Optional.ofNullable("IDENTITY");
+      this.prLUTShapeMode = Optional.of("IDENTITY");
     } else {
       // value: INVERSE, IDENTITY
       // INVERSE => must inverse values (same as monochrome 1)

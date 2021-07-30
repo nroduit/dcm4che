@@ -31,7 +31,7 @@ public class DicomImageReaderTest {
 
   @BeforeClass
   public static void setUp() throws URISyntaxException {
-    IN_DIR = Paths.get(DicomImageReaderTest.class.getResource("").toURI());
+    IN_DIR = Paths.get("target/test-data/");
     BasicConfigurator.configure();
     reader = new DicomImageReader(new DicomImageReaderSpi());
   }
