@@ -42,7 +42,7 @@
   <parent>
     <artifactId>dcm4che-parent</artifactId>
     <groupId>org.dcm4che</groupId>
-    <version>5.23.3</version>
+    <version>5.24.0</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.dcm4che.tool</groupId>
@@ -80,9 +80,9 @@
     <module>dcm4che-tool-ianscu</module>
     <module>dcm4che-tool-ihe</module>
     <module>dcm4che-tool-jpg2dcm</module>
-    <module>dcm4che-tool-json2csv</module>
     <module>dcm4che-tool-json2dcm</module>
     <module>dcm4che-tool-json2index</module>
+    <module>dcm4che-tool-json2props</module>
     <module>dcm4che-tool-json2rst</module>
     <module>dcm4che-tool-mkkos</module>
     <module>dcm4che-tool-movescu</module>

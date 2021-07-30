@@ -43,7 +43,7 @@
   <artifactId>dcm4che-parent</artifactId>
   <packaging>pom</packaging>
   <name>dcm4che DICOM toolkit and utilities</name>
-  <version>5.23.3</version>
+  <version>5.24.0</version>
   <description>dcm4che DICOM toolkit and utilities</description>
   <licenses>
     <license>
@@ -81,10 +81,10 @@
     <maven.compiler.target>1.8</maven.compiler.target>
     <slf4j.version>1.7.30</slf4j.version>
     <log4j.version>1.2.17</log4j.version>
-    <weasis.core.img.version>4.5.1</weasis.core.img.version>
-    <weasis.opencv.native.version>4.5.1-dcm</weasis.opencv.native.version>
-    <keycloak.version>11.0.3</keycloak.version>
-    <jbossws-cxf-client.version>5.4.3.Final</jbossws-cxf-client.version>
+    <weasis.core.img.version>4.5.3</weasis.core.img.version>
+    <weasis.opencv.native.version>4.5.3-dcm</weasis.opencv.native.version>
+    <keycloak.version>14.0.0</keycloak.version>
+    <jbossws-cxf-client.version>5.4.4.Final</jbossws-cxf-client.version>
     <apache-cxf.version>3.3.10</apache-cxf.version>
     <apache-commons-csv.version>1.7</apache-commons-csv.version>
     <apache-commons-compress.version>1.20</apache-commons-compress.version>

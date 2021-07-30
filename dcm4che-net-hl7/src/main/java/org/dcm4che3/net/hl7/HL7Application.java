@@ -38,18 +38,6 @@
 
 package org.dcm4che3.net.hl7;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.Socket;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.dcm4che3.hl7.ERRSegment;
 import org.dcm4che3.hl7.HL7Exception;
 import org.dcm4che3.hl7.HL7Segment;
@@ -58,6 +46,12 @@ import org.dcm4che3.net.CompatibleConnection;
 import org.dcm4che3.net.Connection;
 import org.dcm4che3.net.Device;
 import org.dcm4che3.net.IncompatibleConnectionException;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.Socket;
+import java.security.GeneralSecurityException;
+import java.util.*;
 
 /**
  * @author Gunter Zeilinger <gunterze@gmail.com>
@@ -260,6 +254,13 @@ public class HL7Application implements Serializable {
                             .setErrorLocation(ERRSegment.UnknownSendingApplication)
                             .setUserMessage("Sending Application not recognized"));
         String messageType = msh.getMessageType();
+        if (messageType.equals(""))
+            throw new HL7Exception(
+                    new ERRSegment(msh)
+                            .setHL7ErrorCode(ERRSegment.RequiredFieldMissing)
+                            .setErrorLocation(ERRSegment.MissingMessageType)
+                            .setUserMessage("Missing Message Type"));
+
         if (!(acceptedMessageTypes.contains("*")
                 || acceptedMessageTypes.contains(messageType)))
             throw new HL7Exception(
@@ -272,6 +273,13 @@ public class HL7Application implements Serializable {
             throw new HL7Exception(new ERRSegment(msh)
                             .setHL7ErrorCode(ERRSegment.ApplicationInternalError)
                             .setUserMessage("No HL7 Message Listener configured"));
+
+        if (msh.getMessageControlID() == null)
+            throw new HL7Exception(
+                new ERRSegment(msh)
+                    .setHL7ErrorCode(ERRSegment.RequiredFieldMissing)
+                    .setErrorLocation(ERRSegment.MissingMessageControlID)
+                    .setUserMessage("Missing Message Control ID"));
 
         return listener.onMessage(this, conn, s, msg);
     }
